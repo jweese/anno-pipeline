@@ -28,6 +28,7 @@ RECASER_HOST=$3
 echo $0 $*
 
 echo $RUN_DIR
+shift 3;
 
 # These environment variables need to be set appropriately to run the commands
 # in the agiga pipeline. For now they are hard-coded to values that work on the
@@ -40,4 +41,4 @@ env PYTHONPATH=/home/hltcoe/cnapoles/annotation/lib/splitta.1.03 \
     PERL5LIB=/home/hltcoe/cnapoles/lib/perl5:/home/hltcoe/cnapoles/lib/perl5/site_perl:/home/hltcoe/cnapoles/lib/perl5/site_perl/5.16.0/x86_64-linux-thread-multi-ld/ \
     RECASER_PORT=${RECASER_PORT} \
     DIR_TO_SINGLE_FILE="~/data/muc-process/muc4-to-gigadoc.sh" \
-    ${RUN_DIR}/pipeline.sh $INPUT $WORKDIR $RECASER_HOST --qsub f
+    ${RUN_DIR}/pipeline.sh $INPUT $WORKDIR $RECASER_HOST --qsub f $*

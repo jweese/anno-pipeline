@@ -17,11 +17,16 @@ Note that the pipeline uses a parallel environment (8 threads for
 parsing) so please set your configurations accordingly 
 (qsub -l num_proc=8,mem_free=16G,h_vmem=22G).
 
-Be sure to set the environment encoding to UTF-8. Also, make sure your
-dotfiles do not overwrite PYTHONPATH or PERL5LIB.
+IMPORTANT: Be sure to set the environment encoding to UTF-8. Also, make sure your
+dotfiles do not overwrite PYTHONPATH or PERL5LIB. The pipeline will 
+not work in --qsub t mode (the default mode) if you overwrite these
+variables!
 
 
 USAGE
+Make sure you compile first (ant). You'll need to get dependencies in 
+order (see below).
+
 The default is to run in parallel across different nodes:
 ./pipeline.sh file_to_annotate.xml working_directory [recaser_host] [OPTIONS]
 
@@ -43,6 +48,16 @@ large quantity of files this is unadvisable, because loading the
 Stanford models takes a couple of minutes. It is more efficient to
 include several documents in one file (and documents should be
 formatted like <DOC><TEXT>parses</TEXT></DOC>). 
+
+Expected input can be either a single file or a directory (on which 
+a recursive find is done for all "real" files). By default, the 
+pipeline assumes that all input files are plain text with any XML/SGML 
+escaped. Multiple files are catted together and properly wrapped with 
+bare-bones XML (see below in FILE FORMAT and under BASH VARIABLES, for 
+DIR_TO_SINGLE_FILE). The pipeline then operates on this single file.
+
+Each call to pipeline.sh creates ~12 intermediate files (6 data files 
+6 log files), so be mindful of your file system.
 
 FILE FORMAT
 

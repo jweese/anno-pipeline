@@ -144,7 +144,7 @@ USE_QSUB=true
 
 STEPS=("split" "tok" "sgml" "nbsp" "recase" "parse" "merge" "annotate" "end_hack")
 #defaults, in case someone forgets to add variables
-: ${NUM_PROC_=1}
+: ${NUM_PROC_=3}
 : ${MEM_FREE_="4G"}
 : ${H_RT_="1:00:00"}
 
@@ -157,7 +157,7 @@ STEPS=("split" "tok" "sgml" "nbsp" "recase" "parse" "merge" "annotate" "end_hack
 : ${MEM_FREE_tok="2G"}
 : ${H_RT_tok="1:00:00"}
 
-: ${NUM_PROC_sgml=1}
+: ${NUM_PROC_sgml=2}
 : ${MEM_FREE_sgml="500M"}
 : ${H_RT_sgml="1:00:00"}
 
@@ -187,7 +187,7 @@ fi
 : ${MEM_FREE_annotate="30G"}
 : ${H_RT_annotate="12:00:00"}
 
-: ${NUM_PROC_end_hack=1}
+: ${NUM_PROC_end_hack=2}
 : ${MEM_FREE_end_hack="1G"}
 : ${H_RT_end_hack="1:00:00"}
 
@@ -366,9 +366,9 @@ function run_qcmd {
 	vlist="-v ${3// /,}"
     fi
     if [[ -z $Q_DEPENDENCIES ]]; then
-	cmd="qsub -N $qname -l $resources ${MAIL_OPTIONS} $Q_SHELL $olog -cwd -b y $vlist -V \"$2\""
+	cmd="qsub -q text.q -N $qname -l $resources ${MAIL_OPTIONS} $Q_SHELL $olog -cwd -b y $vlist -V \"$2\""
     else
-	cmd="qsub -N $qname -hold_jid $Q_DEPENDENCIES -l $resources ${MAIL_OPTIONS} $Q_SHELL $olog -cwd -b y $vlist -V \"$2\""
+	cmd="qsub -q text.q -N $qname -hold_jid $Q_DEPENDENCIES -l $resources ${MAIL_OPTIONS} $Q_SHELL $olog -cwd -b y $vlist -V \"$2\""
     fi
     echo "$cmd"
     if $real_run ; then

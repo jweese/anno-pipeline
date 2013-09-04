@@ -144,12 +144,12 @@ USE_QSUB=true
 
 STEPS=("split" "tok" "sgml" "nbsp" "recase" "parse" "merge" "annotate" "end_hack")
 #defaults, in case someone forgets to add variables
-: ${NUM_PROC_=3}
+: ${NUM_PROC_=1}
 : ${MEM_FREE_="4G"}
 : ${H_RT_="1:00:00"}
 
 #pre-made step resource limits
-: ${NUM_PROC_split=1}
+: ${NUM_PROC_split=3}
 : ${MEM_FREE_split="2G"}
 : ${H_RT_split="1:00:00"}
 
@@ -423,7 +423,7 @@ CMDS["split"]="${RUN_DIR}/scripts/scat $wrkdir/$f.single_file | \
 	python ${RUN_DIR}/scripts/split_sentences.py > $wrkdir/$f.split"
 # 2. Tokenize sentences
 #NEEDED["tok"]=( "$wrkdir/$f.split" )
-CMDS["tok"]="java -XX+UseSerialGC -mx${TOKENIZER_HEAP} -cp ${RUN_DIR}/lib/stanford-corenlp-2012-05-22.jar \
+CMDS["tok"]="java -XX:+UseSerialGC -mx${TOKENIZER_HEAP} -cp ${RUN_DIR}/lib/stanford-corenlp-2012-05-22.jar \
 	edu.stanford.nlp.process.PTBTokenizer -options ptb3Escaping \
         -preserveLines $wrkdir/$f.split > $wrkdir/$f.tok"
 # 3. Separate SGML markup from tokenized lines (necessary because the 
@@ -447,7 +447,7 @@ else
     parse_input_suffix="to_parse"
 fi
 #NEEDED["parse"]=( "$wrkdir/$f.$parse_input_suffix" )
-CMDS["parse"]="java -XX+UseSerialGC -Xmx${PARSE_HEAP} -ss${PARSE_SS} -cp ${RUN_DIR}/lib/umd-parser.jar \
+CMDS["parse"]="java -XX:+UseSerialGC -Xmx${PARSE_HEAP} -ss${PARSE_SS} -cp ${RUN_DIR}/lib/umd-parser.jar \
 	edu.purdue.ece.speech.LAPCFG.PurdueParser -gr ${RUN_DIR}/lib/wsj-6.pml \
         -input $wrkdir/$f.$parse_input_suffix -output $wrkdir/$f.parse -jobs ${PARSE_WORKERS}"
 # 5. Merge markup and parses into one file and make legal XML (by adding a root
@@ -460,7 +460,7 @@ CMDS["merge"]="perl ${RUN_DIR}/scripts/merge_file.pl $wrkdir/$f.parse $wrkdir/$f
 #    lines</TEXT></DOC></FILE>. For more options see 
 #    edu.jhu.annotation.GigawordAnnotator
 #NEEDED["annotate"]=( "$wrkdir/$f.merged" )
-CMDS["annotate"]="java -XX+UseSerialGC -Xmx${ANNOTATE_HEAP} -Dfile.encoding=UTF-8 -cp ${RUN_DIR}/bin:${RUN_DIR}/lib/stanford-corenlp-2012-05-22.jar:${RUN_DIR}/lib/my-xom.jar:${RUN_DIR}/lib/stanford-corenlp-2012-05-22-models.jar:${RUN_DIR}/lib/joda-time.jar \
+CMDS["annotate"]="java -XX:+UseSerialGC -Xmx${ANNOTATE_HEAP} -Dfile.encoding=UTF-8 -cp ${RUN_DIR}/bin:${RUN_DIR}/lib/stanford-corenlp-2012-05-22.jar:${RUN_DIR}/lib/my-xom.jar:${RUN_DIR}/lib/stanford-corenlp-2012-05-22-models.jar:${RUN_DIR}/lib/joda-time.jar \
     edu.jhu.annotation.GigawordAnnotator --in $wrkdir/$f.merged $anno_flags > $wrkdir/$f.annotated.xml 2>> $wrkdir/$f.errors"
 # This is a bad hack that you need if illegal UTF8 characters are present
 # in the output. This line will delete those characters. You should not do 

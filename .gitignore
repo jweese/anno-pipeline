@@ -1,0 +1,8 @@
+lib/
+bin/
+test_examples/
+*~
+*.jar
+scripts/start-joshua-recaser.sh
+scripts/joshua-recase.sh
+coe-specific-cmds

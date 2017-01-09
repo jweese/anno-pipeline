@@ -3,6 +3,8 @@
 #
 # Courtney Napoles, cdnapoles@gmail.com
 # 2012-07-03
+# edited Frank Ferraro, ferraro@cs.jhu.edu
+#        2013-06-06 to 2013-06-12
 
 NOTES
 
@@ -15,14 +17,26 @@ Note that the pipeline uses a parallel environment (8 threads for
 parsing) so please set your configurations accordingly 
 (qsub -l num_proc=8,mem_free=16G,h_vmem=22G).
 
-Be sure to set the environment encoding to UTF-8.
+IMPORTANT: Be sure to set the environment encoding to UTF-8. Also, make sure your
+dotfiles do not overwrite PYTHONPATH or PERL5LIB. The pipeline will 
+not work in --qsub t mode (the default mode) if you overwrite these
+variables!
 
 
 USAGE
+Make sure you compile first (ant). You'll need to get dependencies in 
+order (see below).
 
-To run:
+The default is to run in parallel across different nodes:
+./pipeline.sh file_to_annotate.xml working_directory [recaser_host] [OPTIONS]
 
-./pipeline file_to_annotate.xml working_directory [OPTIONS]
+To run *sequentially* on current machine:
+
+./pipeline.sh file_to_annotate.xml working_directory [recaser_host] --qsub f [OPTIONS]
+
+To run *sequentially* on remote machine, qsub the script run_sequential_grid.sh, e.g.
+
+qsub "./run_sequential_grid.sh file_to_annotate.xml working_directory [recaser_host] [OPTIONS]"
 
 To just run the annotators:
 java -Xmx16g -cp bin:lib/stanford-corenlp-2012-05-22.jar:lib/my-xom.jar:lib/stanford-corenlp-2012-05-22-models.jar:lib/joda-time.jar \
@@ -35,6 +49,15 @@ Stanford models takes a couple of minutes. It is more efficient to
 include several documents in one file (and documents should be
 formatted like <DOC><TEXT>parses</TEXT></DOC>). 
 
+Expected input can be either a single file or a directory (on which 
+a recursive find is done for all "real" files). By default, the 
+pipeline assumes that all input files are plain text with any XML/SGML 
+escaped. Multiple files are catted together and properly wrapped with 
+bare-bones XML (see below in FILE FORMAT and under BASH VARIABLES, for 
+DIR_TO_SINGLE_FILE). The pipeline then operates on this single file.
+
+Each call to pipeline.sh creates ~12 intermediate files (6 data files 
+6 log files), so be mindful of your file system.
 
 FILE FORMAT
 
@@ -57,12 +80,16 @@ on the same line as text. The pipeline does not detect/correct
 invalid SGML but it will convert SGML to XML (by adding a root 
 element and escaping <, >, and &. 
 
+small-sample.txt is a much smaller version of sample.txt. See 
+example_output/small_sample/20130618-142319/ for example output
+(final file is small-sample.annotated.xml)
 
 DEPENDENCIES
 
 Software versions used:
 Splitta 1.03
 Stanford CoreNLP 1.3.2
+HTML::Entities
 
 Requirements:
 jgrapht.jar
@@ -74,3 +101,39 @@ stanford-corenlp-2012-05-22-models.jar
 svm_light.6.02
 umd-parser.jar
 wsj-6.pml	# grammar file
+
+The scripts assumes these will by default be in ./lib.
+
+If you want to do true-casing, you need to start the recaser server. Default script
+is provided in scripts/start-recaser.sh
+
+BASH VARIABLES
+
+There are a number of variables that control the program. The most important 
+ones are
+
+* DIR_TO_SINGLE_FILE 
+  * script to convert a directory of files into one
+  * defaults to scripts/raw_text_to_agiga_input.pl
+  * not applicable if the input argument is a file
+* RECASER_SCRIPT
+  * script to handle true casing
+  * defaults to scripts/recase.sh
+* MAIL_OPTIONS (default blank)
+  * A local script variable for pipeline.sh that can be set to have qsub automatically
+    email you when a job is done. The string should include both -m and -M options, e.g.,
+    MAIL_OPTIONS="-m bea -M <email@address.com>"
+
+When recasing, you may want to set the port (RECASER_PORT).
+
+All files are marked by a timestamp; the default is YYYYMMDD-HHMMSS (24hr clock)
+but you can control is with TIMESTAMP. This allows you to start/stop the pipeline 
+at various stages.
+
+The pipeline depends on a single initial file. If the input is a directory, 
+$DIR_TO_SINGLE_FILE applies. If not: if sym_link_okay=1, then we create a symlink 
+to the given file; otherwise, we copy it.
+
+Setting real_run=false will just provide a dry-run.
+
+There are a number of others, which will be documented with time.
